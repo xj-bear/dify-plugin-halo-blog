@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+请严格遵循 dify 的插件结构开发。
+请使用官方打包工具，对插件进行打包，打包后的格式为 difypkg 后缀。
+
+开发步骤：
+1.阅读https://docs.dify.ai/plugin-dev-zh/0211-getting-started-by-prompt，了解流程。
+2.使用https://docs.dify.ai/plugin-dev-zh/0221-initialize-development-tools进行工具初始化
+3.https://docs.dify.ai/plugin-dev-zh/0222-tool-plugin了解 tool 插件开发
+4.https://docs.dify.ai/plugin-dev-zh/0321-plugin-auto-publish-pr通过发布打包

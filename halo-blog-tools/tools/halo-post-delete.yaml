@@ -1,0 +1,44 @@
+identity:
+  name: "halo-post-delete"
+  author: "jason"
+  label:
+    en_US: "Delete Halo Post"
+    zh_Hans: "删除 Halo 文章"
+    pt_BR: "Excluir Post do Halo"
+description:
+  human:
+    en_US: "Delete a blog post from Halo CMS permanently"
+    zh_Hans: "从 Halo CMS 中永久删除博客文章"
+    pt_BR: "Excluir permanentemente um post de blog do Halo CMS"
+  llm: "Permanently delete a blog post from Halo CMS. This action cannot be undone, so use with caution."
+parameters:
+  - name: post_id
+    type: string
+    required: true
+    label:
+      en_US: "Post ID"
+      zh_Hans: "文章 ID"
+      pt_BR: "ID do Post"
+    human_description:
+      en_US: "The unique identifier of the post to delete"
+      zh_Hans: "要删除的文章的唯一标识符"
+      pt_BR: "O identificador único do post para excluir"
+    llm_description: "Unique identifier of the post to delete (required). This action is permanent and cannot be undone."
+    form: llm
+  - name: confirm
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: "Confirm Deletion"
+      zh_Hans: "确认删除"
+      pt_BR: "Confirmar Exclusão"
+    human_description:
+      en_US: "Set to true to confirm you want to permanently delete this post"
+      zh_Hans: "设置为 true 以确认您要永久删除此文章"
+      pt_BR: "Defina como true para confirmar que deseja excluir permanentemente este post"
+    llm_description: "Set to true to confirm deletion. Required for safety to prevent accidental deletions."
+    form: form
+extra:
+  python:
+    source: tools/halo-post-delete.py 

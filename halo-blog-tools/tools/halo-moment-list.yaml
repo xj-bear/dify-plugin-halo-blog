@@ -1,0 +1,72 @@
+identity:
+  name: "halo-moment-list"
+  author: "jason"
+  label:
+    en_US: "Get Moment List"
+    zh_Hans: "获取动态列表"
+description:
+  human:
+    en_US: "Get a list of moments from Halo CMS with filtering and pagination support"
+    zh_Hans: "从 Halo CMS 获取动态列表，支持筛选和分页"
+  llm: "Get a paginated list of moments from Halo CMS with optional filtering by keyword, approved status, and visibility."
+parameters:
+  - name: page
+    type: number
+    required: false
+    default: 0
+    label:
+      en_US: "Page Number"
+      zh_Hans: "页码"
+    human_description:
+      en_US: "Page number for pagination, starting from 0"
+      zh_Hans: "分页页码，从0开始"
+    llm_description: "Page number for pagination, starting from 0"
+    form: llm
+  - name: size
+    type: number
+    required: false
+    default: 10
+    label:
+      en_US: "Page Size"
+      zh_Hans: "每页数量"
+    human_description:
+      en_US: "Number of moments per page"
+      zh_Hans: "每页动态数量"
+    llm_description: "Number of moments to return per page"
+    form: llm
+  - name: approved
+    type: boolean
+    required: false
+    label:
+      en_US: "Approved Only"
+      zh_Hans: "仅已审核"
+    human_description:
+      en_US: "Filter only approved moments"
+      zh_Hans: "仅筛选已审核的动态"
+    llm_description: "Whether to filter only approved moments"
+    form: llm
+  - name: visible
+    type: boolean
+    required: false
+    label:
+      en_US: "Visible Only"
+      zh_Hans: "仅可见"
+    human_description:
+      en_US: "Filter only visible moments"
+      zh_Hans: "仅筛选可见的动态"
+    llm_description: "Whether to filter only visible moments"
+    form: llm
+  - name: keyword
+    type: string
+    required: false
+    label:
+      en_US: "Search Keyword"
+      zh_Hans: "搜索关键词"
+    human_description:
+      en_US: "Keyword to search in moment content"
+      zh_Hans: "在动态内容中搜索的关键词"
+    llm_description: "Keyword to search in moment content"
+    form: llm
+extra:
+  python:
+    source: tools/halo-moment-list.py 

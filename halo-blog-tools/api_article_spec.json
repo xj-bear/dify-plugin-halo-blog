@@ -1,0 +1,56 @@
+{
+  "spec": {
+    "title": "简单格式测试 - 2025-06-30 00:31:02",
+    "slug": "simple-test-1751214662",
+    "headSnapshot": "51d5ae19-af30-4fff-afa1-9d3be6f08a06",
+    "owner": "jason",
+    "template": "",
+    "cover": "",
+    "deleted": false,
+    "publish": false,
+    "pinned": false,
+    "allowComment": true,
+    "visible": "PUBLIC",
+    "priority": 0,
+    "excerpt": {
+      "autoGenerate": true,
+      "raw": ""
+    },
+    "categories": [],
+    "tags": [],
+    "htmlMetas": []
+  },
+  "status": {
+    "phase": "DRAFT",
+    "permalink": "/archives/simple-test-1751214662",
+    "excerpt": "",
+    "inProgress": true,
+    "contributors": [
+      "jason"
+    ],
+    "hideFromList": false,
+    "observedVersion": 7
+  },
+  "apiVersion": "content.halo.run/v1alpha1",
+  "kind": "Post",
+  "metadata": {
+    "finalizers": [
+      "post-protection"
+    ],
+    "name": "simple-test-1751214662",
+    "labels": {
+      "content.halo.run/published": "false",
+      "content.halo.run/deleted": "false",
+      "content.halo.run/owner": "jason",
+      "content.halo.run/visible": "PUBLIC"
+    },
+    "annotations": {
+      "content.halo.run/permalink-pattern": "/archives/{slug}",
+      "checksum/config": "b5e3a77db264016614efc6f38dee5f794b76eff22211756f9fff91827080eb8a",
+      "content.halo.run/last-associated-categories": "[]",
+      "content.halo.run/last-associated-tags": "[]"
+    },
+    "version": 7,
+    "creationTimestamp": "2025-06-29T16:31:03.291958012Z"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "spec": {
+    "subjectRef": {
+      "group": "content.halo.run",
+      "version": "v1alpha1",
+      "kind": "Post",
+      "name": "simple-test-1751214662"
+    },
+    "rawType": "markdown",
+    "rawPatch": "这是一个简单的纯文本测试。\n\n请检查编辑器是否能够正确识别和编辑这段内容。",
+    "contentPatch": "这是一个简单的纯文本测试。\n\n请检查编辑器是否能够正确识别和编辑这段内容。",
+    "lastModifyTime": "2025-06-29T16:31:03.566562319Z",
+    "owner": "jason",
+    "contributors": [
+      "jason"
+    ]
+  },
+  "apiVersion": "content.halo.run/v1alpha1",
+  "kind": "Snapshot",
+  "metadata": {
+    "name": "51d5ae19-af30-4fff-afa1-9d3be6f08a06",
+    "annotations": {
+      "content.halo.run/keep-raw": "true"
+    },
+    "version": 0,
+    "creationTimestamp": "2025-06-29T16:31:03.568551059Z"
+  }
+}

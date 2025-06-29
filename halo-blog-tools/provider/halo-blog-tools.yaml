@@ -1,0 +1,59 @@
+identity:
+  author: "jason"
+  name: "halo-blog-tools"
+  label:
+    en_US: "Halo Blog Tools"
+    zh_Hans: "Halo 博客工具"
+    pt_BR: "Halo Blog Tools"
+  description:
+    en_US: "AI-powered blog management tools for Halo CMS, supporting article and moment management"
+    zh_Hans: "为 Halo CMS 提供的 AI 驱动的博客管理工具，支持文章和动态管理"
+    pt_BR: "Ferramentas de gerenciamento de blog alimentadas por IA para Halo CMS"
+  icon: "icon.svg"
+supported_model_types:
+  - llm
+credentials_for_provider:
+  base_url:
+    type: text-input
+    required: true
+    label:
+      en_US: "Halo CMS Base URL"
+      zh_Hans: "Halo CMS 基础 URL"
+      pt_BR: "URL Base do Halo CMS"
+    placeholder:
+      en_US: "https://your-halo-site.com"
+      zh_Hans: "https://your-halo-site.com"
+      pt_BR: "https://your-halo-site.com"
+    help:
+      en_US: "The base URL of your Halo CMS installation"
+      zh_Hans: "您的 Halo CMS 安装的基础 URL"
+      pt_BR: "A URL base da sua instalação do Halo CMS"
+  access_token:
+    type: secret-input
+    required: true
+    label:
+      en_US: "Personal Access Token"
+      zh_Hans: "个人访问令牌"
+      pt_BR: "Token de Acesso Pessoal"
+    placeholder:
+      en_US: "Enter your Halo personal access token"
+      zh_Hans: "输入您的 Halo 个人访问令牌"
+      pt_BR: "Digite seu token de acesso pessoal do Halo"
+    help:
+      en_US: "Personal access token with post:manage, moment:manage, category:manage, tag:manage permissions"
+      zh_Hans: "具有 post:manage, moment:manage, category:manage, tag:manage 权限的个人访问令牌"
+      pt_BR: "Token de acesso pessoal com permissões post:manage, moment:manage, category:manage, tag:manage"
+tools:
+  - tools/halo-setup.yaml
+  - tools/halo-post-create.yaml
+  - tools/halo-post-get.yaml
+  - tools/halo-post-update.yaml
+  - tools/halo-post-delete.yaml
+  - tools/halo-post-list.yaml
+  - tools/halo-moment-create.yaml
+  - tools/halo-moment-list.yaml
+  - tools/halo-categories-list.yaml
+  - tools/halo-tags-list.yaml
+extra:
+  python:
+    source: provider/halo_blog_tools.py

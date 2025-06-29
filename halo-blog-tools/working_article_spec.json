@@ -1,0 +1,100 @@
+{
+  "spec": {
+    "title": "不会编程，20分钟手搓一个旅游AI工具",
+    "slug": "1750077108317",
+    "releaseSnapshot": "ab9bc79d-aba8-48dc-a3cf-caf4c2b40aee-snapshot-ulxqgyhx",
+    "headSnapshot": "ab9bc79d-aba8-48dc-a3cf-caf4c2b40aee-snapshot-59damxxc",
+    "baseSnapshot": "043feb8c-b5bc-43c9-be0b-8586afd58f61",
+    "owner": "jason",
+    "template": "",
+    "cover": "https://img.gpt.edu.bi/utools/2025-06/250616203335654_1750077215734.png",
+    "deleted": false,
+    "publish": true,
+    "publishTime": "2025-06-16T12:33:00Z",
+    "pinned": false,
+    "allowComment": true,
+    "visible": "PUBLIC",
+    "priority": 0,
+    "excerpt": {
+      "autoGenerate": false,
+      "raw": "作者和家人计划在10月前往新西兰南岛展开10天亲子之旅，借助Gemini 2.5生成详细的攻略文本，涵盖行程安排、天气气候、景点推荐及无人机拍摄建议。随后通过Canvas构建网页框架，接入OpenWeatherMap获取实时天气数据，并利用Dify实现智能路线规划、交通建议等功能，形成动态出行助手。为提升互动性，集成Twikoo评论系统，允许用户对各景点进行反馈。同时优化移动端适配，确保手机端体验流畅美观。最终成果为集攻略、天气查询、路线指引、评论互动于一体的旅游网页，已部署至点击这里看看成品。该工具既满足家庭旅行需求，也为后续行程调整提供数据支持，实现从攻略生成到智能出行的完整闭环。"
+    },
+    "categories": [
+      "category-Fmjjw",
+      "category-taz5korf"
+    ],
+    "tags": [
+      "tag-9jvkt22i",
+      "tag-yRtCv"
+    ],
+    "htmlMetas": []
+  },
+  "status": {
+    "phase": "PUBLISHED",
+    "conditions": [
+      {
+        "type": "PUBLISHED",
+        "status": "TRUE",
+        "lastTransitionTime": "2025-06-16T12:32:42.724248139Z",
+        "message": "Post published successfully.",
+        "reason": "Published"
+      },
+      {
+        "type": "CancelledPublish",
+        "status": "TRUE",
+        "lastTransitionTime": "2025-06-16T12:33:50.230313756Z",
+        "message": "CancelledPublish",
+        "reason": "CancelledPublish"
+      },
+      {
+        "type": "DRAFT",
+        "status": "TRUE",
+        "lastTransitionTime": "2025-06-16T12:31:50.072541444Z",
+        "message": "Drafted post successfully.",
+        "reason": "DraftedSuccessfully"
+      }
+    ],
+    "permalink": "/archives/1750077108317",
+    "excerpt": "作者和家人计划在10月前往新西兰南岛展开10天亲子之旅，借助Gemini 2.5生成详细的攻略文本，涵盖行程安排、天气气候、景点推荐及无人机拍摄建议。随后通过Canvas构建网页框架，接入OpenWeatherMap获取实时天气数据，并利用Dify实现智能路线规划、交通建议等功能，形成动态出行助手。为提升互动性，集成Twikoo评论系统，允许用户对各景点进行反馈。同时优化移动端适配，确保手机端体验流畅美观。最终成果为集攻略、天气查询、路线指引、评论互动于一体的旅游网页，已部署至点击这里看看成品。该工具既满足家庭旅行需求，也为后续行程调整提供数据支持，实现从攻略生成到智能出行的完整闭环。",
+    "inProgress": true,
+    "contributors": [
+      "jason"
+    ],
+    "hideFromList": false,
+    "lastModifyTime": "2025-06-21T04:38:35.783467231Z",
+    "observedVersion": 161
+  },
+  "apiVersion": "content.halo.run/v1alpha1",
+  "kind": "Post",
+  "metadata": {
+    "finalizers": [
+      "post-protection"
+    ],
+    "name": "ab9bc79d-aba8-48dc-a3cf-caf4c2b40aee",
+    "labels": {
+      "content.halo.run/published": "true",
+      "content.halo.run/deleted": "false",
+      "content.halo.run/owner": "jason",
+      "content.halo.run/visible": "PUBLIC",
+      "content.halo.run/archive-year": "2025",
+      "content.halo.run/archive-month": "06",
+      "content.halo.run/archive-day": "16",
+      "isSummary": "true"
+    },
+    "annotations": {
+      "coverImgType": "customizeImg",
+      "copyrightType": "original",
+      "content.halo.run/preferred-editor": "bytemd",
+      "checksum/config": "dbf54a0dbc8b25904f04282c5644d8e22ed4ee759fafaec7c98ef8e69dd94bd3",
+      "content.halo.run/permalink-pattern": "/archives/{slug}",
+      "content.halo.run/last-associated-tags": "[\"tag-9jvkt22i\",\"tag-yRtCv\"]",
+      "content.halo.run/last-associated-categories": "[\"category-Fmjjw\",\"category-taz5korf\"]",
+      "content.halo.run/last-released-snapshot": "ab9bc79d-aba8-48dc-a3cf-caf4c2b40aee-snapshot-ulxqgyhx",
+      "checksum/content": "ed3c9d32f6711038c27d6a4e73c792b51172f37e931bcc746f45a1cafa3a1ff6",
+      "flow.post.kunkunyu.com/new-post-notified": "true",
+      "content.halo.run/stats": "{\"visit\":32,\"upvote\":0,\"totalComment\":0,\"approvedComment\":0}"
+    },
+    "version": 161,
+    "creationTimestamp": "2025-06-16T12:31:50.036015260Z"
+  }
+}

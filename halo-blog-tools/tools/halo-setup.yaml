@@ -1,0 +1,17 @@
+identity:
+  name: "halo-setup"
+  author: "jason"
+  label:
+    en_US: "Setup Halo Connection"
+    zh_Hans: "设置 Halo 连接"
+    pt_BR: "Configurar Conexão Halo"
+description:
+  human:
+    en_US: "Test and verify the connection to Halo CMS, check authentication and permissions"
+    zh_Hans: "测试并验证与 Halo CMS 的连接，检查认证和权限"
+    pt_BR: "Teste e verifique a conexão com o Halo CMS, verificar autenticação e permissões"
+  llm: "Test Halo CMS connection and authentication. Returns user information and available permissions."
+parameters: []
+extra:
+  python:
+    source: tools/halo-setup.py 

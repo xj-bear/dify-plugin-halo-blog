@@ -1,0 +1,81 @@
+identity:
+  name: "halo-moment-create"
+  author: "jason"
+  label:
+    en_US: "Create Halo Moment"
+    zh_Hans: "创建 Halo 动态"
+    pt_BR: "Criar Momento do Halo"
+description:
+  human:
+    en_US: "Create a new moment (short post) in Halo CMS with content and tags"
+    zh_Hans: "在 Halo CMS 中创建新的动态（短文），包含内容和标签"
+    pt_BR: "Criar um novo momento (post curto) no Halo CMS com conteúdo e tags"
+  llm: "Create a new moment in Halo CMS. Moments are short posts or updates, similar to social media posts."
+parameters:
+  - name: content
+    type: string
+    required: true
+    label:
+      en_US: "Moment Content"
+      zh_Hans: "动态内容"
+      pt_BR: "Conteúdo do Momento"
+    human_description:
+      en_US: "The content of the moment (max 1000 characters)"
+      zh_Hans: "动态的内容（最多1000字符）"
+      pt_BR: "O conteúdo do momento (máx. 1000 caracteres)"
+    llm_description: "Content of the moment (required, 1-1000 characters)"
+    form: llm
+  - name: tags
+    type: string
+    required: false
+    label:
+      en_US: "Tags"
+      zh_Hans: "标签"
+      pt_BR: "Tags"
+    human_description:
+      en_US: "Comma-separated list of tags for the moment"
+      zh_Hans: "用逗号分隔的动态标签列表"
+      pt_BR: "Lista de tags separadas por vírgula para o momento"
+    llm_description: "Comma-separated list of tags for the moment (optional)"
+    form: llm
+  - name: visible
+    type: select
+    required: false
+    default: "PUBLIC"
+    options:
+      - value: "PUBLIC"
+        label:
+          en_US: "Public"
+          zh_Hans: "公开"
+          pt_BR: "Público"
+      - value: "PRIVATE"
+        label:
+          en_US: "Private"
+          zh_Hans: "私密"
+          pt_BR: "Privado"
+    label:
+      en_US: "Visibility"
+      zh_Hans: "可见性"
+      pt_BR: "Visibilidade"
+    human_description:
+      en_US: "Visibility of the moment (default: PUBLIC)"
+      zh_Hans: "动态的可见性（默认：公开）"
+      pt_BR: "Visibilidade do momento (padrão: PUBLIC)"
+    llm_description: "Visibility of the moment: PUBLIC or PRIVATE (default: PUBLIC)"
+    form: form
+  - name: media_urls
+    type: string
+    required: false
+    label:
+      en_US: "Media URLs"
+      zh_Hans: "媒体文件链接"
+      pt_BR: "URLs de Mídia"
+    human_description:
+      en_US: "Comma-separated list of media URLs (images, videos, audios)"
+      zh_Hans: "用逗号分隔的媒体文件链接列表（图片、视频、音频）"
+      pt_BR: "Lista de URLs de mídia separadas por vírgula (imagens, vídeos, áudios)"
+    llm_description: "Comma-separated list of media URLs to attach to the moment (optional)"
+    form: llm
+extra:
+  python:
+    source: tools/halo-moment-create.py 

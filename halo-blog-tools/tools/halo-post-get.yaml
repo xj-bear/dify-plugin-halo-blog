@@ -1,0 +1,44 @@
+identity:
+  name: "halo-post-get"
+  author: "jason"
+  label:
+    en_US: "Get Halo Post"
+    zh_Hans: "获取 Halo 文章"
+    pt_BR: "Obter Post do Halo"
+description:
+  human:
+    en_US: "Retrieve a specific blog post from Halo CMS by its ID or name"
+    zh_Hans: "通过ID或名称从 Halo CMS 获取特定的博客文章"
+    pt_BR: "Recuperar um post específico do blog do Halo CMS por seu ID ou nome"
+  llm: "Retrieve a specific blog post from Halo CMS by its unique identifier. Returns post details including content, metadata, tags, and categories."
+parameters:
+  - name: post_id
+    type: string
+    required: true
+    label:
+      en_US: "Post ID"
+      zh_Hans: "文章 ID"
+      pt_BR: "ID do Post"
+    human_description:
+      en_US: "The unique identifier (name) of the post to retrieve"
+      zh_Hans: "要获取的文章的唯一标识符（名称）"
+      pt_BR: "O identificador único (nome) do post para recuperar"
+    llm_description: "Unique identifier (name) of the post to retrieve (required)"
+    form: llm
+  - name: include_content
+    type: boolean
+    required: false
+    default: true
+    label:
+      en_US: "Include Content"
+      zh_Hans: "包含内容"
+      pt_BR: "Incluir Conteúdo"
+    human_description:
+      en_US: "Whether to include the full post content in the response (default: true)"
+      zh_Hans: "是否在响应中包含完整的文章内容（默认：true）"
+      pt_BR: "Se deve incluir o conteúdo completo do post na resposta (padrão: true)"
+    llm_description: "Whether to include the full post content in the response (default: true)"
+    form: form
+extra:
+  python:
+    source: tools/halo-post-get.py 

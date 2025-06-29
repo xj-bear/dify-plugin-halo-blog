@@ -1,0 +1,122 @@
+identity:
+  name: "halo-post-create"
+  author: "jason"
+  label:
+    en_US: "Create Halo Post"
+    zh_Hans: "创建 Halo 文章"
+    pt_BR: "Criar Post Halo"
+description:
+  human:
+    en_US: "Create a new blog post in Halo CMS with title and content"
+    zh_Hans: "在 Halo CMS 中创建包含标题和内容的新博客文章"
+    pt_BR: "Criar um novo post de blog no Halo CMS com título e conteúdo"
+  llm: "Create a new blog post in Halo CMS. Requires title and content parameters. Returns post ID and status."
+parameters:
+  - name: title
+    type: string
+    required: true
+    label:
+      en_US: "Post Title"
+      zh_Hans: "文章标题"
+      pt_BR: "Título do Post"
+    human_description:
+      en_US: "The title of the blog post"
+      zh_Hans: "博客文章的标题"
+      pt_BR: "O título do post do blog"
+    llm_description: "The title of the blog post to be created"
+    form: llm
+  - name: content
+    type: string
+    required: true
+    label:
+      en_US: "Post Content"
+      zh_Hans: "文章内容"
+      pt_BR: "Conteúdo do Post"
+    human_description:
+      en_US: "The main content of the blog post (supports Markdown)"
+      zh_Hans: "博客文章的主要内容（支持 Markdown）"
+      pt_BR: "O conteúdo principal do post do blog (suporte a Markdown)"
+    llm_description: "The main content of the blog post in Markdown format"
+    form: llm
+  - name: categories
+    type: string
+    required: false
+    label:
+      en_US: "Categories"
+      zh_Hans: "分类"
+      pt_BR: "Categorias"
+    human_description:
+      en_US: "Comma-separated list of category names"
+      zh_Hans: "用逗号分隔的分类名称列表"
+      pt_BR: "Lista de nomes de categorias separadas por vírgula"
+    llm_description: "Comma-separated list of category names (optional)"
+    form: llm
+  - name: tags
+    type: string
+    required: false
+    label:
+      en_US: "Tags"
+      zh_Hans: "标签"
+      pt_BR: "Tags"
+    human_description:
+      en_US: "Comma-separated list of tag names"
+      zh_Hans: "用逗号分隔的标签名称列表"
+      pt_BR: "Lista de nomes de tags separadas por vírgula"
+    llm_description: "Comma-separated list of tag names (optional)"
+    form: llm
+  - name: excerpt
+    type: string
+    required: false
+    label:
+      en_US: "Post Excerpt"
+      zh_Hans: "文章摘要"
+      pt_BR: "Resumo do Post"
+    human_description:
+      en_US: "A brief summary of the post content"
+      zh_Hans: "文章内容的简要摘要"
+      pt_BR: "Um resumo breve do conteúdo do post"
+    llm_description: "Brief excerpt or summary of the post (optional)"
+    form: llm
+  - name: slug
+    type: string
+    required: false
+    label:
+      en_US: "URL Slug"
+      zh_Hans: "URL别名"
+      pt_BR: "Slug da URL"
+    human_description:
+      en_US: "Custom URL slug for the post (auto-generated if not provided)"
+      zh_Hans: "文章的自定义URL别名（如果不提供则自动生成）"
+      pt_BR: "Slug personalizado da URL para o post (gerado automaticamente se não fornecido)"
+    llm_description: "Custom URL slug for the post (optional, auto-generated from title if not provided)"
+    form: llm
+  - name: cover
+    type: string
+    required: false
+    label:
+      en_US: "Cover Image URL"
+      zh_Hans: "封面图片URL"
+      pt_BR: "URL da Imagem de Capa"
+    human_description:
+      en_US: "URL of the cover image for the post"
+      zh_Hans: "文章封面图片的URL"
+      pt_BR: "URL da imagem de capa do post"
+    llm_description: "URL of the cover image for the post (optional)"
+    form: llm
+  - name: publish_immediately
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: "Publish Immediately"
+      zh_Hans: "立即发布"
+      pt_BR: "Publicar Imediatamente"
+    human_description:
+      en_US: "Whether to publish the post immediately or save as draft"
+      zh_Hans: "是否立即发布文章或保存为草稿"
+      pt_BR: "Se deve publicar o post imediatamente ou salvar como rascunho"
+    llm_description: "Whether to publish the post immediately (true) or save as draft (false)"
+    form: form
+extra:
+  python:
+    source: tools/halo-post-create.py 

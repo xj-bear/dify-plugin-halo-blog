@@ -1,0 +1,39 @@
+identity:
+  name: "halo-categories-list"
+  author: "Halo Plugin Team"
+  label:
+    en_US: "Get Categories List"
+    zh_Hans: "获取分类列表"
+description:
+  human:
+    en_US: "Get a list of categories from Halo CMS with pagination support"
+    zh_Hans: "从 Halo CMS 获取分类列表，支持分页"
+  llm: "Get a paginated list of categories from Halo CMS."
+parameters:
+  - name: page
+    type: number
+    required: false
+    default: 0
+    label:
+      en_US: "Page Number"
+      zh_Hans: "页码"
+    human_description:
+      en_US: "Page number for pagination, starting from 0"
+      zh_Hans: "分页页码，从0开始"
+    llm_description: "Page number for pagination, starting from 0"
+    form: llm
+  - name: size
+    type: number
+    required: false
+    default: 10
+    label:
+      en_US: "Page Size"
+      zh_Hans: "每页数量"
+    human_description:
+      en_US: "Number of categories per page"
+      zh_Hans: "每页分类数量"
+    llm_description: "Number of categories to return per page"
+    form: llm
+extra:
+  python:
+    source: tools/halo-categories-list.py 

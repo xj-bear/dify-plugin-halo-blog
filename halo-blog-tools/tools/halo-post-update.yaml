@@ -1,0 +1,121 @@
+identity:
+  name: "halo-post-update"
+  author: "jason"
+  label:
+    en_US: "Update Halo Post"
+    zh_Hans: "更新 Halo 文章"
+    pt_BR: "Atualizar Post do Halo"
+description:
+  human:
+    en_US: "Update an existing blog post in Halo CMS"
+    zh_Hans: "更新 Halo CMS 中的现有博客文章"
+    pt_BR: "Atualizar um post de blog existente no Halo CMS"
+  llm: "Update an existing blog post in Halo CMS. You can update title, content, tags, categories, publish status, and other properties."
+parameters:
+  - name: post_id
+    type: string
+    required: true
+    label:
+      en_US: "Post ID"
+      zh_Hans: "文章 ID"
+      pt_BR: "ID do Post"
+    human_description:
+      en_US: "The unique identifier of the post to update"
+      zh_Hans: "要更新的文章的唯一标识符"
+      pt_BR: "O identificador único do post para atualizar"
+    llm_description: "Unique identifier of the post to update (required)"
+    form: llm
+  - name: title
+    type: string
+    required: false
+    label:
+      en_US: "New Title"
+      zh_Hans: "新标题"
+      pt_BR: "Novo Título"
+    human_description:
+      en_US: "New title for the post (optional, keep current if not provided)"
+      zh_Hans: "文章的新标题（可选，如果不提供则保持当前标题）"
+      pt_BR: "Novo título para o post (opcional, manter atual se não fornecido)"
+    llm_description: "New title for the post (optional, keeps current title if not provided)"
+    form: llm
+  - name: content
+    type: string
+    required: false
+    label:
+      en_US: "New Content"
+      zh_Hans: "新内容"
+      pt_BR: "Novo Conteúdo"
+    human_description:
+      en_US: "New content for the post in Markdown format (optional)"
+      zh_Hans: "Markdown 格式的文章新内容（可选）"
+      pt_BR: "Novo conteúdo para o post em formato Markdown (opcional)"
+    llm_description: "New content for the post in Markdown format (optional)"
+    form: llm
+  - name: excerpt
+    type: string
+    required: false
+    label:
+      en_US: "New Excerpt"
+      zh_Hans: "新摘要"
+      pt_BR: "Novo Resumo"
+    human_description:
+      en_US: "New excerpt for the post (optional)"
+      zh_Hans: "文章的新摘要（可选）"
+      pt_BR: "Novo resumo para o post (opcional)"
+    llm_description: "New excerpt for the post (optional)"
+    form: llm
+  - name: tags
+    type: string
+    required: false
+    label:
+      en_US: "Tags"
+      zh_Hans: "标签"
+      pt_BR: "Tags"
+    human_description:
+      en_US: "Comma-separated list of tags (optional, replaces current tags)"
+      zh_Hans: "用逗号分隔的标签列表（可选，替换当前标签）"
+      pt_BR: "Lista de tags separadas por vírgula (opcional, substitui as tags atuais)"
+    llm_description: "Comma-separated list of tags (optional, replaces current tags)"
+    form: llm
+  - name: categories
+    type: string
+    required: false
+    label:
+      en_US: "Categories"
+      zh_Hans: "分类"
+      pt_BR: "Categorias"
+    human_description:
+      en_US: "Comma-separated list of categories (optional, replaces current categories)"
+      zh_Hans: "用逗号分隔的分类列表（可选，替换当前分类）"
+      pt_BR: "Lista de categorias separadas por vírgula (opcional, substitui as categorias atuais)"
+    llm_description: "Comma-separated list of categories (optional, replaces current categories)"
+    form: llm
+  - name: published
+    type: boolean
+    required: false
+    label:
+      en_US: "Publish Status"
+      zh_Hans: "发布状态"
+      pt_BR: "Status de Publicação"
+    human_description:
+      en_US: "Whether to publish or unpublish the post (optional, keeps current status if not provided)"
+      zh_Hans: "是否发布或取消发布文章（可选，如果不提供则保持当前状态）"
+      pt_BR: "Se deve publicar ou despublicar o post (opcional, mantém status atual se não fornecido)"
+    llm_description: "Whether to publish (true) or unpublish (false) the post (optional)"
+    form: form
+  - name: cover
+    type: string
+    required: false
+    label:
+      en_US: "Cover Image URL"
+      zh_Hans: "封面图片 URL"
+      pt_BR: "URL da Imagem de Capa"
+    human_description:
+      en_US: "New cover image URL for the post (optional)"
+      zh_Hans: "文章的新封面图片URL（可选）"
+      pt_BR: "Nova URL da imagem de capa do post (opcional)"
+    llm_description: "New cover image URL for the post (optional)"
+    form: llm
+extra:
+  python:
+    source: tools/halo-post-update.py 

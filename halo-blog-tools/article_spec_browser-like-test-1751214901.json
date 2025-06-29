@@ -1,0 +1,55 @@
+{
+  "spec": {
+    "title": "浏览器模拟测试 - 2025-06-30 00:35:01",
+    "slug": "browser-like-test-1751214901",
+    "headSnapshot": "25d32409-7b26-4492-b7b8-9b28b1ecd381",
+    "owner": "jason",
+    "template": "",
+    "cover": "",
+    "deleted": false,
+    "publish": false,
+    "pinned": false,
+    "allowComment": true,
+    "visible": "PUBLIC",
+    "priority": 0,
+    "excerpt": {
+      "autoGenerate": true,
+      "raw": ""
+    },
+    "categories": [],
+    "tags": []
+  },
+  "status": {
+    "phase": "DRAFT",
+    "permalink": "/archives/browser-like-test-1751214901",
+    "excerpt": "",
+    "inProgress": true,
+    "contributors": [
+      "jason"
+    ],
+    "hideFromList": false,
+    "observedVersion": 8
+  },
+  "apiVersion": "content.halo.run/v1alpha1",
+  "kind": "Post",
+  "metadata": {
+    "finalizers": [
+      "post-protection"
+    ],
+    "name": "browser-like-test-1751214901",
+    "labels": {
+      "content.halo.run/published": "false",
+      "content.halo.run/deleted": "false",
+      "content.halo.run/owner": "jason",
+      "content.halo.run/visible": "PUBLIC"
+    },
+    "annotations": {
+      "checksum/config": "477e58a00c313ec26fe605e35c34885236c185bdff511335bc99e46c0b1ba3b8",
+      "content.halo.run/permalink-pattern": "/archives/{slug}",
+      "content.halo.run/last-associated-categories": "[]",
+      "content.halo.run/last-associated-tags": "[]"
+    },
+    "version": 8,
+    "creationTimestamp": "2025-06-29T16:35:01.481936229Z"
+  }
+}
