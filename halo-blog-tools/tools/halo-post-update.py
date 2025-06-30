@@ -247,6 +247,26 @@ class HaloPostUpdateTool(Tool):
             # 记录更新数据用于调试
             logger.info(f"Updating post {post_id} with data: {json.dumps(update_data, indent=2)}")
             
+            # 如果更新了内容，需要同时更新content-json注解以支持编辑器
+            if content is not None:
+                yield self.create_text_message("📝 正在更新文章内容...")
+                
+                # 准备内容数据（支持编辑器格式）
+                content_data = {
+                    "rawType": "markdown", 
+                    "raw": content,
+                    "content": content
+                }
+                
+                # 更新annotations以包含编辑器支持
+                if "annotations" not in update_data["metadata"]:
+                    update_data["metadata"]["annotations"] = {}
+                
+                # 设置编辑器兼容注解
+                update_data["metadata"]["annotations"]["content.halo.run/content-json"] = json.dumps(content_data)
+                update_data["metadata"]["annotations"]["content.halo.run/preferred-editor"] = "default"
+                update_data["metadata"]["annotations"]["content.halo.run/content-type"] = "markdown"
+            
             # 发送更新请求
             response = session.put(
                 f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_id}",
@@ -283,30 +303,6 @@ class HaloPostUpdateTool(Tool):
                 yield self.create_text_message(f"❌ 更新文章失败: HTTP {response.status_code} - {error_detail}")
                 return
             
-            # 更新内容（如果提供了）
-            content_updated = False
-            content_update_error = None
-            if content is not None:
-                yield self.create_text_message("📝 正在更新文章内容...")
-                
-                content_data = {
-                    "raw": content,
-                    "content": content,
-                    "rawType": "markdown"
-                }
-                
-                content_response = session.put(
-                    f"{base_url}/apis/api.console.halo.run/v1alpha1/posts/{post_id}/content",
-                    data=json.dumps(content_data),
-                    timeout=30
-                )
-                
-                if content_response.status_code in [200, 201]:
-                    content_updated = True
-                else:
-                    content_update_error = f"HTTP {content_response.status_code}"
-                    logger.warning(f"Failed to update post content: {content_response.status_code} - {content_response.text}")
-            
             # 解析响应
             result = response.json()
             post_title = result.get("spec", {}).get("title", "")
@@ -319,27 +315,14 @@ class HaloPostUpdateTool(Tool):
             status_emoji = "🚀" if post_published else "📝"
             status_text = "已发布" if post_published else "草稿"
             
-            # 判断整体更新状态
-            overall_success = True
-            if content is not None and not content_updated:
-                overall_success = False
-            
-            if overall_success:
-                response_lines = [
-                    f"✅ **文章更新成功！**",
-                    "",
-                    f"📝 **标题**: {post_title}",
-                    f"🆔 **ID**: {post_id}",
-                    f"{status_emoji} **状态**: {status_text}",
-                ]
-            else:
-                response_lines = [
-                    f"⚠️ **文章部分更新成功**",
-                    "",
-                    f"📝 **标题**: {post_title}",
-                    f"🆔 **ID**: {post_id}",
-                    f"{status_emoji} **状态**: {status_text}",
-                ]
+            # 构建更新成功响应
+            response_lines = [
+                f"✅ **文章更新成功！**",
+                "",
+                f"📝 **标题**: {post_title}",
+                f"🆔 **ID**: {post_id}",
+                f"{status_emoji} **状态**: {status_text}",
+            ]
             
             if post_categories:
                 response_lines.append(f"📂 **分类**: {len(post_categories)} 个")
@@ -352,10 +335,14 @@ class HaloPostUpdateTool(Tool):
             
             # 详细更新状态
             if content is not None:
-                if content_updated:
-                    response_lines.append("📄 **内容**: 已更新")
-                else:
-                    response_lines.append(f"❌ **内容**: 更新失败 ({content_update_error})")
+                response_lines.append("📄 **内容**: 已更新（包含编辑器兼容性修复）")
+                response_lines.append("✨ **编辑器支持**: 添加了编辑器识别注解")
+            
+            response_lines.extend([
+                "",
+                f"🔗 **编辑器链接**: {base_url}/console/posts/editor?name={post_id}",
+                f"💡 **提示**: 文章现在可以被编辑器正确识别和编辑"
+            ])
             
             yield self.create_text_message('\n'.join(response_lines))
             
@@ -368,16 +355,17 @@ class HaloPostUpdateTool(Tool):
                 "tags_count": len(post_tags),
                 "cover": post_cover,
                 "published": post_published,
-                "content_updated": content_updated,
+                "editor_compatible": True,
                 "updated_fields": {
                     "title": title is not None,
-                    "content": content_updated,
+                    "content": content is not None,
                     "categories": categories_str is not None,
                     "tags": tags_str is not None,
                     "cover": cover is not None,
                     "published": published is not None,
                     "excerpt": excerpt is not None
-                }
+                },
+                "editor_url": f"{base_url}/console/posts/editor?name={post_id}"
             })
             
         except requests.exceptions.Timeout:

@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from typing import Any
+from typing import Any, Dict, Optional, List
 import logging
 import requests
 import json
@@ -11,11 +11,117 @@ from datetime import datetime
 from dify_plugin import Tool
 from dify_plugin.entities.tool import ToolInvokeMessage
 
+# 配置日志
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class HaloPostCreateTool(Tool):
     """Halo CMS 文章创建工具 - 基于VSCode扩展的正确实现方式"""
+    
+    parameters: list = [
+        {
+            "name": "title",
+            "type": "string",
+            "required": True,
+            "label": {
+                "en_US": "Article Title",
+                "zh_Hans": "文章标题"
+            }
+        },
+        {
+            "name": "content",
+            "type": "string", 
+            "required": True,
+            "label": {
+                "en_US": "Article Content",
+                "zh_Hans": "文章内容"
+            }
+        },
+        {
+            "name": "slug",
+            "type": "string",
+            "required": False,
+            "label": {
+                "en_US": "Article Slug",
+                "zh_Hans": "文章访问路径"
+            }
+        },
+        {
+            "name": "tags",
+            "type": "string",
+            "required": False,
+            "label": {
+                "en_US": "Tags (comma separated)",
+                "zh_Hans": "标签（逗号分隔）"
+            }
+        },
+        {
+            "name": "categories",
+            "type": "string", 
+            "required": False,
+            "label": {
+                "en_US": "Categories (comma separated)",
+                "zh_Hans": "分类（逗号分隔）"
+            }
+        },
+        {
+            "name": "excerpt",
+            "type": "string",
+            "required": False,
+            "label": {
+                "en_US": "Article Excerpt",
+                "zh_Hans": "文章摘要"
+            }
+        },
+        {
+            "name": "publish_immediately",
+            "type": "boolean",
+            "required": False,
+            "label": {
+                "en_US": "Publish Immediately",
+                "zh_Hans": "立即发布"
+            }
+        },
+        {
+            "name": "editor_type",
+            "type": "select",
+            "required": False,
+            "options": [
+                {
+                    "label": {
+                        "en_US": "Default Rich Text Editor",
+                        "zh_Hans": "默认富文本编辑器"
+                    },
+                    "value": "default"
+                },
+                {
+                    "label": {
+                        "en_US": "StackEdit Markdown Editor",
+                        "zh_Hans": "StackEdit Markdown编辑器"
+                    },
+                    "value": "stackedit"
+                },
+                {
+                    "label": {
+                        "en_US": "ByteMD Markdown Editor", 
+                        "zh_Hans": "ByteMD Markdown编辑器"
+                    },
+                    "value": "bytemd"
+                },
+                {
+                    "label": {
+                        "en_US": "Vditor Editor (if installed)",
+                        "zh_Hans": "Vditor编辑器（如已安装）"
+                    },
+                    "value": "vditor"
+                }
+            ],
+            "label": {
+                "en_US": "Preferred Editor",
+                "zh_Hans": "首选编辑器"
+            }
+        }
+    ]
     
     def _safe_slug_generate(self, title: str) -> str:
         """安全生成slug"""
@@ -266,6 +372,7 @@ class HaloPostCreateTool(Tool):
             excerpt = tool_parameters.get("excerpt", "").strip()
             cover = tool_parameters.get("cover", "").strip()
             publish_immediately = tool_parameters.get("publish_immediately", False)
+            editor_type = tool_parameters.get("editor_type", "default")
             
             if not title:
                 yield self.create_text_message("❌ 文章标题不能为空")
@@ -334,7 +441,11 @@ class HaloPostCreateTool(Tool):
                     "name": post_name,
                     "annotations": {
                         # 关键：使用content.halo.run/content-json注解传递内容
-                        "content.halo.run/content-json": json.dumps(content_data)
+                        "content.halo.run/content-json": json.dumps(content_data),
+                        # 添加编辑器插件支持注解
+                        "content.halo.run/preferred-editor": editor_type,
+                        # 指定内容类型以便编辑器识别
+                        "content.halo.run/content-type": "markdown"
                     }
                 },
                 "spec": {
@@ -417,28 +528,184 @@ class HaloPostCreateTool(Tool):
             post_name = result.get("metadata", {}).get("name", post_name)
             post_title = result.get("spec", {}).get("title", title)
             
-            yield self.create_text_message("✅ 文章创建成功！正在验证编辑器兼容性...")
+            yield self.create_text_message("✅ 文章创建成功！正在设置内容...")
             
-            # 验证content-json注解是否被正确保存
+            # 🔧 关键修复：双重内容设置策略
+            # 1. 快照机制 - 确保前端显示
+            # 2. Console Content API - 确保编辑器兼容
+            
+            # 步骤1: 创建正确的快照
+            snapshot_success = False
+            timestamp = int(time.time())
+            snapshot_name = f"snapshot-{post_name}-{timestamp}"
+            
+            snapshot_content = {
+                'spec': {
+                    'subjectRef': {
+                        'group': 'content.halo.run',
+                        'version': 'v1alpha1',
+                        'kind': 'Post',
+                        'name': post_name
+                    },
+                    'rawType': 'markdown',
+                    'rawPatch': content,
+                    'contentPatch': content,  # 简化处理，让Halo自己渲染HTML
+                    'lastModifyTime': datetime.now().isoformat() + 'Z',
+                    'owner': owner,
+                    'contributors': [owner]
+                },
+                'apiVersion': 'content.halo.run/v1alpha1',
+                'kind': 'Snapshot',
+                'metadata': {
+                    'name': snapshot_name,
+                    'annotations': {
+                        'content.halo.run/keep-raw': 'true'
+                    }
+                }
+            }
+            
             try:
-                verify_response = session.get(
-                    f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}",
-                    timeout=10
+                snapshot_response = session.post(
+                    f"{base_url}/apis/content.halo.run/v1alpha1/snapshots",
+                    json=snapshot_content,
+                    timeout=30
                 )
                 
-                if verify_response.status_code == 200:
-                    verify_result = verify_response.json()
-                    annotations = verify_result.get("metadata", {}).get("annotations", {})
-                    has_content_json = "content.halo.run/content-json" in annotations
+                if snapshot_response.status_code in [200, 201]:
+                    snapshot_success = True
+                    yield self.create_text_message("✅ 快照创建成功！")
                     
-                    if has_content_json:
-                        yield self.create_text_message("✅ 编辑器兼容性验证通过！content-json注解已正确保存。")
+                                                              # 关联快照到文章
+                     post_update_data = created_post.copy()
+                    post_update_data['spec']['releaseSnapshot'] = snapshot_name
+                    post_update_data['spec']['headSnapshot'] = snapshot_name
+                    post_update_data['spec']['baseSnapshot'] = snapshot_name
+                    
+                    update_response = session.put(
+                        f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}",
+                        json=post_update_data,
+                        timeout=30
+                    )
+                    
+                    if update_response.status_code in [200, 201]:
+                        yield self.create_text_message("✅ 快照关联成功！")
                     else:
-                        yield self.create_text_message("⚠️ 编辑器兼容性验证失败：content-json注解未保存。")
+                        yield self.create_text_message(f"⚠️ 快照关联失败: {update_response.status_code}")
                 else:
-                    yield self.create_text_message("⚠️ 无法验证编辑器兼容性。")
-            except:
-                yield self.create_text_message("⚠️ 编辑器兼容性验证出错。")
+                    yield self.create_text_message(f"⚠️ 快照创建失败: {snapshot_response.status_code}")
+                    
+            except Exception as e:
+                logger.warning(f"快照创建过程中出错: {e}")
+                yield self.create_text_message(f"⚠️ 快照创建过程中出错")
+            
+            # 步骤2: 设置Console Content API（编辑器数据源）
+            console_content_success = False
+            try:
+                content_data_for_api = {
+                    "raw": content,
+                    "content": content,  # 让Halo自己处理HTML转换
+                    "rawType": "markdown"
+                }
+                
+                content_response = session.put(
+                    f"{base_url}/apis/api.console.halo.run/v1alpha1/posts/{post_name}/content",
+                    json=content_data_for_api,
+                    timeout=30
+                )
+                
+                if content_response.status_code in [200, 201]:
+                    console_content_success = True
+                    yield self.create_text_message("✅ 编辑器内容设置成功！")
+                else:
+                    yield self.create_text_message(f"⚠️ 编辑器内容设置失败: HTTP {content_response.status_code}")
+                    logger.warning(f"Console Content API失败: {content_response.status_code}, {content_response.text}")
+                    
+            except Exception as e:
+                logger.warning(f"Console Content API调用出错: {e}")
+                yield self.create_text_message(f"⚠️ 编辑器内容设置过程中出错")
+            
+            # 步骤3: 更新编辑器兼容性注解
+            editor_annotation_success = False
+            try:
+                # 准备Editor.js格式的数据
+                editor_js_data = {
+                    "time": int(time.time() * 1000),
+                    "blocks": [
+                        {
+                            "type": "header",
+                            "data": {
+                                "text": post_title,
+                                "level": 1
+                            }
+                        },
+                        {
+                            "type": "paragraph",
+                            "data": {
+                                "text": f"文章内容 - 通过Dify插件创建，支持{editor_type}编辑器"
+                            }
+                        }
+                    ],
+                    "version": "2.28.2"
+                }
+                
+                # 获取最新文章数据并更新注解
+                latest_post_response = session.get(f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}")
+                if latest_post_response.status_code == 200:
+                    latest_post_data = latest_post_response.json()
+                    
+                    if 'metadata' not in latest_post_data:
+                        latest_post_data['metadata'] = {}
+                    if 'annotations' not in latest_post_data['metadata']:
+                        latest_post_data['metadata']['annotations'] = {}
+                    
+                    # 更新编辑器兼容性注解
+                    latest_post_data['metadata']['annotations'].update({
+                        'content.halo.run/content-json': json.dumps(editor_js_data),
+                        'content.halo.run/preferred-editor': editor_type,
+                        'content.halo.run/content-type': 'markdown'
+                    })
+                    
+                    annotation_response = session.put(
+                        f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}",
+                        json=latest_post_data,
+                        timeout=30
+                    )
+                    
+                    if annotation_response.status_code in [200, 201]:
+                        editor_annotation_success = True
+                        yield self.create_text_message("✅ 编辑器兼容性注解更新成功！")
+                    else:
+                        yield self.create_text_message(f"⚠️ 注解更新失败: {annotation_response.status_code}")
+                        
+            except Exception as e:
+                logger.warning(f"编辑器注解更新出错: {e}")
+                yield self.create_text_message(f"⚠️ 编辑器注解更新过程中出错")
+            
+            # 验证最终结果
+            if snapshot_success and console_content_success and editor_annotation_success:
+                yield self.create_text_message("🔍 正在验证编辑器兼容性...")
+                
+                try:
+                    # 验证content API是否工作
+                    verify_content_response = session.get(
+                        f"{base_url}/apis/api.console.halo.run/v1alpha1/posts/{post_name}/content",
+                        timeout=10
+                    )
+                    
+                    if verify_content_response.status_code == 200:
+                        verify_content = verify_content_response.json()
+                        verified_raw = verify_content.get('raw', '')
+                        if len(verified_raw) > 0:
+                            yield self.create_text_message("✅ 编辑器兼容性验证通过！内容可正常访问。")
+                        else:
+                            yield self.create_text_message("⚠️ 内容验证失败：内容为空。")
+                    else:
+                        yield self.create_text_message("⚠️ 无法验证内容API。")
+                        
+                except Exception as e:
+                    yield self.create_text_message("⚠️ 内容验证出错。")
+            else:
+                yield self.create_text_message("⚠️ 由于内容设置失败，编辑器可能无法正常工作。")
             
             # 如果需要发布，调用发布API
             if publish_immediately:
@@ -480,11 +747,21 @@ class HaloPostCreateTool(Tool):
             if excerpt:
                 response_lines.append(f"📄 **摘要**: 已设置")
             
+            # 编辑器类型显示映射
+            editor_display = {
+                "default": "默认富文本编辑器",
+                "stackedit": "StackEdit Markdown编辑器", 
+                "bytemd": "ByteMD Markdown编辑器",
+                "vditor": "Vditor编辑器"
+            }
+            
             response_lines.extend([
                 "",
-                f"✨ **编辑器兼容性**: 已修复，使用正确的content-json注解",
+                f"🎨 **编辑器类型**: {editor_display.get(editor_type, editor_type)}",
+                f"✨ **编辑器兼容性**: {'✅ 已修复' if snapshot_success and console_content_success and editor_annotation_success else '⚠️ 部分修复'}",
+                f"📄 **内容设置**: {'✅ 成功' if snapshot_success and console_content_success and editor_annotation_success else '❌ 失败'}",
                 f"🔗 **编辑器链接**: {base_url}/console/posts/editor?name={post_name}",
-                f"💡 **提示**: 文章现在应该可以被编辑器正确识别和编辑"
+                f"💡 **提示**: {'文章现在可以在' + editor_display.get(editor_type, editor_type) + '中正常编辑' if snapshot_success and console_content_success and editor_annotation_success else '请手动在编辑器中设置内容'}"
             ])
             
             yield self.create_text_message('\n'.join(response_lines))
@@ -499,8 +776,11 @@ class HaloPostCreateTool(Tool):
                 "published": publish_immediately,
                 "categories_count": len(categories),
                 "tags_count": len(tags),
-                "editor_compatible": True,
-                "content_method": "content.halo.run/content-json annotation (verified working)",
+                "editor_type": editor_type,
+                "editor_display": editor_display.get(editor_type, editor_type),
+                "editor_compatible": snapshot_success and console_content_success and editor_annotation_success,
+                "content_set": snapshot_success and console_content_success and editor_annotation_success,
+                "content_method": "content API + content-json annotation + snapshot + console content API",
                 "api_endpoint_used": "content.halo.run/v1alpha1/posts",
                 "editor_url": f"{base_url}/console/posts/editor?name={post_name}"
             }
