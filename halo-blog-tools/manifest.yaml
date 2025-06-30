@@ -1,4 +1,4 @@
-version: 0.0.2
+version: 0.0.3
 type: plugin
 author: jason
 name: halo-blog-tools
@@ -6,8 +6,8 @@ label:
   en_US: Halo Blog Tools
   zh_Hans: Halo博客工具
 description:
-  en_US: A comprehensive plugin for Halo CMS blog management, including post CRUD operations and moment creation
-  zh_Hans: Halo CMS博客管理综合插件，包含文章增删改查和动态创建功能
+  en_US: A comprehensive plugin for Halo CMS blog management, including post CRUD operations and moment creation. v0.0.3 fixes timestamp display and tag formatting issues
+  zh_Hans: Halo CMS博客管理综合插件，包含文章增删改查和动态创建功能。v0.0.3修复了时间戳显示和标签格式问题
 icon: icon.svg
 resource:
   memory: 268435456
@@ -17,7 +17,7 @@ plugins:
   tools:
     - provider/halo-blog-tools.yaml
 meta:
-  version: 0.0.2
+  version: 0.0.3
   arch:
     - amd64
     - arm64

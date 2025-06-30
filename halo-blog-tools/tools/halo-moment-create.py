@@ -4,6 +4,7 @@ import logging
 import requests
 import json
 import time
+from datetime import datetime
 
 from dify_plugin import Tool
 from dify_plugin.entities.tool import ToolInvokeMessage
@@ -284,15 +285,20 @@ class HaloMomentCreateTool(Tool):
                     tag_link = f'<a class="tag" href="/moments?tag={encoded_tag}" data-pjax="">{tag}</a>'
                     tag_links.append(tag_link)
                 
-                # 将标签链接添加到内容开头，标签之间用空格分隔
-                tag_html = ' '.join(tag_links)
-                raw_with_tags = ''.join([f'#{tag}' for tag in tag_list]) + raw_content
-                html_with_tags = tag_html + raw_content.replace('\n', '<br>')
+                # ✅ 修复标签分行问题：使用更好的HTML结构避免分行问题
+                tag_html = '<span class="tags">' + ' '.join(tag_links) + '</span>'
+                
+                # 在标签和内容之间添加换行
+                raw_with_tags = ''.join([f'#{tag} ' for tag in tag_list]) + raw_content
+                html_with_tags = tag_html + '<br>' + raw_content.replace('\n', '<br>')
                 
                 return raw_with_tags, html_with_tags
             
             # 生成包含标签的内容
             content_with_tags, html_with_tags = generate_content_with_tags(content, tag_names)
+            
+            # ✅ 修复时间戳显示问题：添加发布时间字段
+            current_time = datetime.now().isoformat() + "Z"
             
             # 准备动态数据 - 根据Halo官方API格式
             moment_data = {
@@ -312,7 +318,8 @@ class HaloMomentCreateTool(Tool):
                     "tags": tag_names,  # 使用标签显示名称，符合官方API spec.tags格式
                     "visible": visible,
                     "approved": True,
-                    "allowComment": True
+                    "allowComment": True,
+                    "releaseTime": current_time  # ✅ 新增：发布时间字段，修复时间戳显示问题
                 }
             }
             
