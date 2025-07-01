@@ -174,3 +174,36 @@ cython_debug/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Project specific
+key.txt
+test_*.py
+*_test.py
+remote_debug.py
+start_remote_debug.py
+create_package.ps1
+package.py
+
+# Dify CLI tool (should not be packaged)
+dify.exe
+
+# Package files
+*.zip
+*.difypkg
+temp_package/
+
+# Documentation (development) - 根目录下的临时文档
+Bug修复报告*.md
+使用指南*.md
+编辑器*.md
+远程调试*.md
+快速修复*.md
+GUIDE.md
+PRIVACY.md
+VERIFICATION_REPORT.md
+
+# 保留 doc/ 文件夹下的文档
+!doc/
+
+# Assets
+_assets/
