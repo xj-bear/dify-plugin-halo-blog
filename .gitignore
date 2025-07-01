@@ -198,6 +198,15 @@ Bug修复报告*.md
 编辑器*.md
 远程调试*.md
 快速修复*.md
+
+# Custom exclusions
+.cursor/
+.augment/
+_assets/
+_pyche_/
+doc/
+tools/
+dify-new.exe
 GUIDE.md
 PRIVACY.md
 VERIFICATION_REPORT.md
