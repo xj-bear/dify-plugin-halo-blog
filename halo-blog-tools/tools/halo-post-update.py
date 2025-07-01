@@ -196,7 +196,25 @@ class HaloPostUpdateTool(Tool):
                 return
             
             current_data = get_response.json()
-            
+
+            # 🔧 修复：从现有文章中获取默认值（Dify不支持动态默认值）
+            current_annotations = current_data.get('metadata', {}).get('annotations', {})
+            current_spec = current_data.get('spec', {})
+
+            # 如果没有指定编辑器类型，使用当前文章的编辑器类型
+            if not editor_type or editor_type == "default":
+                current_editor = current_annotations.get('content.halo.run/preferred-editor', 'default')
+                editor_type = current_editor
+                yield self.create_text_message(f"📝 使用当前编辑器类型: {editor_type}")
+
+            # 如果没有指定发布状态，使用当前文章的发布状态，默认为False
+            if published is None:
+                current_published = current_spec.get('publish', False)
+                published = current_published
+                yield self.create_text_message(f"📤 使用当前发布状态: {'已发布' if published else '草稿'}")
+            else:
+                yield self.create_text_message(f"📤 设置发布状态: {'已发布' if published else '草稿'}")
+
             # 更新指定字段
             update_data = current_data.copy()
             
@@ -397,6 +415,8 @@ class HaloPostUpdateTool(Tool):
                             latest_post_data['spec']['headSnapshot'] = snapshot_name
                             # 保持baseSnapshot不变，这是初始版本
 
+                            # 注意：不在这里设置发布状态，而是使用专门的发布API
+
                             update_response = session.put(
                                 f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_id}",
                                 json=latest_post_data,
@@ -405,6 +425,37 @@ class HaloPostUpdateTool(Tool):
 
                             if update_response.status_code in [200, 201]:
                                 yield self.create_text_message("✅ 快照关联成功！")
+
+                                # 🔧 关键修复：使用正确的发布/取消发布API
+                                if published is not None:
+                                    if published:
+                                        yield self.create_text_message("📤 正在发布文章...")
+
+                                        # 使用Halo的发布API
+                                        publish_response = session.put(
+                                            f"{base_url}/apis/uc.api.content.halo.run/v1alpha1/posts/{post_id}/publish",
+                                            timeout=30
+                                        )
+
+                                        if publish_response.status_code in [200, 201]:
+                                            yield self.create_text_message("✅ 文章发布完成！")
+                                        else:
+                                            yield self.create_text_message(f"⚠️ 文章发布失败: {publish_response.status_code}")
+                                            logger.warning(f"文章发布失败: {publish_response.text}")
+                                    else:
+                                        yield self.create_text_message("📝 正在取消发布...")
+
+                                        # 使用Halo的取消发布API
+                                        unpublish_response = session.put(
+                                            f"{base_url}/apis/uc.api.content.halo.run/v1alpha1/posts/{post_id}/unpublish",
+                                            timeout=30
+                                        )
+
+                                        if unpublish_response.status_code in [200, 201]:
+                                            yield self.create_text_message("✅ 文章已设为草稿！")
+                                        else:
+                                            yield self.create_text_message(f"⚠️ 取消发布失败: {unpublish_response.status_code}")
+                                            logger.warning(f"取消发布失败: {unpublish_response.text}")
                             else:
                                 yield self.create_text_message(f"⚠️ 快照关联失败: {update_response.status_code}")
                                 logger.warning(f"快照关联失败: {update_response.text}")

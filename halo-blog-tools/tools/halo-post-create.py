@@ -455,7 +455,7 @@ class HaloPostCreateTool(Tool):
                     "template": "",
                     "cover": cover if cover else "",
                     "deleted": False,
-                    "publish": bool(publish_immediately),
+                    "publish": False,  # 始终创建为草稿，然后使用发布API
                     "pinned": False,
                     "allowComment": True,
                     "visible": "PUBLIC",
@@ -474,10 +474,7 @@ class HaloPostCreateTool(Tool):
                 }
             }
             
-            # 如果要立即发布，添加发布时间
-            if publish_immediately:
-                publish_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-                post_data["spec"]["publishTime"] = publish_time
+            # 注意：不在这里设置发布时间，发布API会自动处理
             
             yield self.create_text_message("📝 正在创建文章...")
             
@@ -607,10 +604,7 @@ class HaloPostCreateTool(Tool):
                         latest_post_data['spec']['headSnapshot'] = snapshot_name
                         latest_post_data['spec']['baseSnapshot'] = snapshot_name
 
-                        # 🔧 关键修复：如果需要立即发布，设置发布状态
-                        if publish_immediately:
-                            latest_post_data['spec']['publish'] = True
-                            latest_post_data['spec']['publishTime'] = datetime.now().isoformat() + 'Z'
+                        # 注意：不在这里设置发布状态，而是使用专门的发布API
 
                         update_response = session.put(
                             f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}",
@@ -622,11 +616,21 @@ class HaloPostCreateTool(Tool):
                             yield self.create_text_message("✅ 快照关联成功！")
                             content_set_success = True
 
-                            # 如果发布，等待Halo处理
+                            # 🔧 关键修复：使用正确的发布API
                             if publish_immediately:
                                 yield self.create_text_message("📤 正在发布文章...")
-                                time.sleep(2)  # 等待Halo处理发布
-                                yield self.create_text_message("✅ 文章发布完成！")
+
+                                # 使用Halo的发布API
+                                publish_response = session.put(
+                                    f"{base_url}/apis/uc.api.content.halo.run/v1alpha1/posts/{post_name}/publish",
+                                    timeout=30
+                                )
+
+                                if publish_response.status_code in [200, 201]:
+                                    yield self.create_text_message("✅ 文章发布完成！")
+                                else:
+                                    yield self.create_text_message(f"⚠️ 文章发布失败: {publish_response.status_code}")
+                                    logger.warning(f"文章发布失败: {publish_response.text}")
                         else:
                             yield self.create_text_message(f"⚠️ 快照关联失败: {update_response.status_code}")
                             logger.warning(f"快照关联失败: {update_response.text}")

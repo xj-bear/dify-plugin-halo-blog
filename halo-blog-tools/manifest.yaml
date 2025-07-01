@@ -1,4 +1,4 @@
-version: 0.1.2
+version: 0.2.0
 type: plugin
 author: jason
 name: halo-blog-tools
@@ -7,7 +7,7 @@ label:
   zh_Hans: Halo博客工具
 description:
   en_US: A comprehensive plugin for Halo CMS blog management with editor compatibility fixes
-  zh_Hans: Halo CMS博客管理综合插件，修复文章更新快照创建问题，确保内容正确更新
+  zh_Hans: Halo CMS博客管理综合插件，使用正确的发布API，彻底解决发布状态问题
 icon: icon.svg
 resource:
   memory: 268435456
@@ -17,7 +17,7 @@ plugins:
   tools:
     - provider/halo-blog-tools.yaml
 meta:
-  version: 0.1.2
+  version: 0.2.0
   arch:
     - amd64
     - arm64
