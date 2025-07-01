@@ -5,6 +5,7 @@ import requests
 import json
 import re
 import time
+from datetime import datetime
 
 from dify_plugin import Tool
 from dify_plugin.entities.tool import ToolInvokeMessage
@@ -248,22 +249,18 @@ class HaloPostUpdateTool(Tool):
             # 记录更新数据用于调试
             logger.info(f"Updating post {post_id} with data: {json.dumps(update_data, indent=2)}")
             
-            # 如果更新了内容或编辑器类型，需要同时更新content-json注解以支持编辑器
+            # 准备内容数据（如果需要更新内容）
+            content_data = None
             if content is not None or editor_type != "default":
                 if content is not None:
-                    yield self.create_text_message("📝 正在更新文章内容...")
-                else:
-                    yield self.create_text_message("⚙️ 正在更新编辑器设置...")
-                
-                # 准备内容数据（支持编辑器格式）
-                # 如果没有新内容，从现有数据中获取
-                if content is not None:
+                    yield self.create_text_message("📝 正在准备更新文章内容...")
                     content_data = {
-                        "rawType": "markdown", 
+                        "rawType": "markdown",
                         "raw": content,
                         "content": content
                     }
                 else:
+                    yield self.create_text_message("⚙️ 正在准备更新编辑器设置...")
                     # 尝试从现有annotations中获取内容，如果没有则使用空内容
                     existing_content_json = current_data.get("metadata", {}).get("annotations", {}).get("content.halo.run/content-json")
                     if existing_content_json:
@@ -274,90 +271,16 @@ class HaloPostUpdateTool(Tool):
                             content_data = {"rawType": "markdown", "raw": "", "content": ""}
                     else:
                         content_data = {"rawType": "markdown", "raw": "", "content": ""}
-                
+
                 # 更新annotations以包含编辑器支持
                 if "annotations" not in update_data["metadata"]:
                     update_data["metadata"]["annotations"] = {}
-                
+
                 # 设置编辑器兼容注解
                 update_data["metadata"]["annotations"]["content.halo.run/content-json"] = json.dumps(content_data)
                 update_data["metadata"]["annotations"]["content.halo.run/preferred-editor"] = editor_type
                 update_data["metadata"]["annotations"]["content.halo.run/content-type"] = "markdown"
-                
-                # 🔧 关键修复：创建快照确保前端显示 + Console Content API确保编辑器显示
-                try:
-                    # 1. 创建快照（前端显示）
-                    timestamp = int(time.time() * 1000)
-                    snapshot_name = f"snapshot-{timestamp}"
-                    
-                    snapshot_data = {
-                        'spec': {
-                            'subjectRef': {
-                                'group': 'content.halo.run',
-                                'version': 'v1alpha1',
-                                'kind': 'Post',
-                                'name': post_id
-                            },
-                            'rawType': 'markdown',
-                            'rawPatch': content_data["raw"],
-                            'contentPatch': content_data["content"],
-                            'lastModifyTime': datetime.now().isoformat() + 'Z',
-                            'owner': current_data.get("spec", {}).get("owner", "admin"),
-                            'contributors': [current_data.get("spec", {}).get("owner", "admin")]
-                        },
-                        'apiVersion': 'content.halo.run/v1alpha1',
-                        'kind': 'Snapshot',
-                        'metadata': {
-                            'name': snapshot_name,
-                            'annotations': {
-                                'content.halo.run/keep-raw': 'true',
-                                'content.halo.run/display-name': f'更新快照-{post_id}',
-                                'content.halo.run/version': str(timestamp)
-                            }
-                        }
-                    }
-                    
-                    snapshot_response = session.post(
-                        f"{base_url}/apis/content.halo.run/v1alpha1/snapshots",
-                        json=snapshot_data,
-                        timeout=30
-                    )
-                    
-                    if snapshot_response.status_code in [200, 201]:
-                        # 关联快照到文章
-                        update_data["spec"]["releaseSnapshot"] = snapshot_name
-                        update_data["spec"]["headSnapshot"] = snapshot_name
-                        yield self.create_text_message("✅ 快照创建并关联成功！")
-                    else:
-                        yield self.create_text_message(f"⚠️ 快照创建失败: {snapshot_response.status_code}")
-                    
-                    # 2. 设置Console Content API（编辑器显示）
-                    content_api_data = {
-                        "raw": content_data["raw"],
-                        "content": content_data["content"],
-                        "rawType": content_data["rawType"]
-                    }
-                    
-                    content_api_response = session.put(
-                        f"{base_url}/apis/api.console.halo.run/v1alpha1/posts/{post_id}/content",
-                        json=content_api_data,
-                        timeout=30
-                    )
-                    
-                    # 🔧 关键修复：Console Content API 的 500 错误是正常现象
-                    if content_api_response.status_code in [200, 201]:
-                        yield self.create_text_message("✅ 编辑器内容同步成功！")
-                    elif content_api_response.status_code == 500:
-                        # 500错误是Halo系统的正常行为，不影响实际功能
-                        yield self.create_text_message("✅ 编辑器内容同步完成（Halo内部处理中）")
-                        logger.info(f"Console Content API返回500（正常现象）: {content_api_response.text}")
-                    else:
-                        yield self.create_text_message(f"⚠️ 编辑器内容同步失败: {content_api_response.status_code}")
-                        logger.warning(f"Console Content API失败: {content_api_response.text}")
-                        
-                except Exception as e:
-                    yield self.create_text_message("⚠️ 内容设置过程中出错")
-                    logger.warning(f"内容设置出错: {e}")
+
             
             # 发送更新请求
             response = session.put(
@@ -402,6 +325,128 @@ class HaloPostUpdateTool(Tool):
             post_tags = result.get("spec", {}).get("tags", [])
             post_cover = result.get("spec", {}).get("cover", "")
             post_published = result.get("spec", {}).get("publish", False)
+
+            # 🔧 关键修复：文章更新成功后，正确设置内容
+            # 1. 先创建新快照（内容存储）
+            # 2. 再关联快照到文章（版本控制）
+            # 3. 最后设置Console Content API（编辑器支持）
+
+            content_update_success = True
+            if content_data is not None:
+                yield self.create_text_message("📝 正在更新文章内容...")
+
+                try:
+                    # 步骤1: 创建新的内容快照
+                    yield self.create_text_message("📸 正在创建更新快照...")
+
+                    timestamp = int(time.time() * 1000)
+                    snapshot_name = f"snapshot-{timestamp}"
+
+                    snapshot_data = {
+                        'spec': {
+                            'subjectRef': {
+                                'group': 'content.halo.run',
+                                'version': 'v1alpha1',
+                                'kind': 'Post',
+                                'name': post_id
+                            },
+                            'rawType': content_data["rawType"],
+                            'rawPatch': content_data["raw"],
+                            'contentPatch': content_data["content"],
+                            'lastModifyTime': datetime.now().isoformat() + 'Z',
+                            'owner': current_data.get("spec", {}).get("owner", "admin"),
+                            'contributors': [current_data.get("spec", {}).get("owner", "admin")]
+                        },
+                        'apiVersion': 'content.halo.run/v1alpha1',
+                        'kind': 'Snapshot',
+                        'metadata': {
+                            'name': snapshot_name,
+                            'annotations': {
+                                'content.halo.run/keep-raw': 'true',
+                                'content.halo.run/display-name': f'更新快照-{post_id}',
+                                'content.halo.run/version': str(timestamp)
+                            }
+                        }
+                    }
+
+                    snapshot_response = session.post(
+                        f"{base_url}/apis/content.halo.run/v1alpha1/snapshots",
+                        json=snapshot_data,
+                        timeout=30
+                    )
+
+                    if snapshot_response.status_code in [200, 201]:
+                        yield self.create_text_message("✅ 更新快照创建成功！")
+
+                        # 🔧 关键修复：等待Halo处理快照，避免409冲突
+                        yield self.create_text_message("⏳ 等待Halo处理快照...")
+                        time.sleep(1)  # 等待1秒让Halo处理
+
+                        # 步骤2: 关联新快照到文章
+                        yield self.create_text_message("🔗 正在关联新快照...")
+
+                        # 重新获取最新文章数据，避免版本冲突
+                        latest_post_response = session.get(
+                            f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_id}",
+                            timeout=30
+                        )
+
+                        if latest_post_response.status_code == 200:
+                            latest_post_data = latest_post_response.json()
+                            latest_post_data['spec']['releaseSnapshot'] = snapshot_name
+                            latest_post_data['spec']['headSnapshot'] = snapshot_name
+                            # 保持baseSnapshot不变，这是初始版本
+
+                            update_response = session.put(
+                                f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_id}",
+                                json=latest_post_data,
+                                timeout=30
+                            )
+
+                            if update_response.status_code in [200, 201]:
+                                yield self.create_text_message("✅ 快照关联成功！")
+                            else:
+                                yield self.create_text_message(f"⚠️ 快照关联失败: {update_response.status_code}")
+                                logger.warning(f"快照关联失败: {update_response.text}")
+                                content_update_success = False
+                        else:
+                            yield self.create_text_message("⚠️ 无法获取最新文章数据进行快照关联")
+                            content_update_success = False
+                    else:
+                        yield self.create_text_message(f"⚠️ 快照创建失败: {snapshot_response.status_code}")
+                        logger.warning(f"快照创建失败: {snapshot_response.text}")
+                        content_update_success = False
+
+                    # 步骤3: 设置Console Content API（编辑器支持）
+                    if content_update_success:
+                        yield self.create_text_message("📝 正在设置编辑器内容...")
+
+                        content_api_data = {
+                            "raw": content_data["raw"],
+                            "content": content_data["content"],
+                            "rawType": content_data["rawType"]
+                        }
+
+                        content_api_response = session.put(
+                            f"{base_url}/apis/api.console.halo.run/v1alpha1/posts/{post_id}/content",
+                            json=content_api_data,
+                            timeout=30
+                        )
+
+                        # Console Content API的结果不影响主要功能
+                        if content_api_response.status_code in [200, 201]:
+                            yield self.create_text_message("✅ 编辑器内容同步成功！")
+                        elif content_api_response.status_code == 500:
+                            yield self.create_text_message("✅ 编辑器内容同步完成（Halo内部处理中）")
+                            logger.info(f"Console Content API返回500（正常现象）: {content_api_response.text}")
+                        else:
+                            yield self.create_text_message(f"⚠️ 编辑器内容同步失败: {content_api_response.status_code}")
+                            logger.warning(f"Console Content API失败: {content_api_response.text}")
+
+                except Exception as e:
+                    yield self.create_text_message("⚠️ 内容更新过程中出错")
+                    logger.warning(f"内容更新出错: {e}")
+                    content_update_success = False
             
             # 格式化响应 - 根据实际更新结果显示状态
             status_emoji = "🚀" if post_published else "📝"
@@ -427,20 +472,23 @@ class HaloPostUpdateTool(Tool):
             
             # 详细更新状态
             if content is not None:
-                response_lines.append("📄 **内容**: 已更新（包含编辑器兼容性修复）")
-            
+                content_status = "✅ 成功" if content_update_success else "⚠️ 部分成功"
+                response_lines.append(f"📄 **内容**: 已更新 ({content_status})")
+
             if editor_type != "default":
                 editor_names = {
                     "default": "默认富文本编辑器",
-                    "stackedit": "StackEdit Markdown编辑器", 
+                    "stackedit": "StackEdit Markdown编辑器",
                     "bytemd": "ByteMD Markdown编辑器",
                     "vditor": "Vditor编辑器"
                 }
                 editor_display_name = editor_names.get(editor_type, editor_type)
                 response_lines.append(f"⚙️ **编辑器**: 已设置为 {editor_display_name}")
-            
+
             if content is not None or editor_type != "default":
                 response_lines.append("✨ **编辑器支持**: 添加了编辑器识别注解")
+                if content_data is not None:
+                    response_lines.append(f"🔧 **内容设置**: {'✅ 完成' if content_update_success else '⚠️ 部分完成'}")
             
             response_lines.extend([
                 "",
@@ -460,6 +508,7 @@ class HaloPostUpdateTool(Tool):
                 "cover": post_cover,
                 "published": post_published,
                 "editor_compatible": True,
+                "content_update_success": content_update_success if content_data is not None else None,
                 "updated_fields": {
                     "title": title is not None,
                     "content": content is not None,

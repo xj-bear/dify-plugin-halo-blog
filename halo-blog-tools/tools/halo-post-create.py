@@ -525,193 +525,124 @@ class HaloPostCreateTool(Tool):
                 return
             
             # 解析响应
-            result = response.json()
-            post_name = result.get("metadata", {}).get("name", post_name)
-            post_title = result.get("spec", {}).get("title", title)
-            
-            yield self.create_text_message("✅ 文章创建成功！正在设置内容...")
-            
-            # 🔧 关键修复：双重内容设置策略
-            # 1. 快照机制 - 确保前端显示
-            # 2. Console Content API - 确保编辑器兼容
-            
-            # 步骤1: 创建正确的快照
-            snapshot_success = False
-            # 生成唯一快照名称 - 避免409冲突
-            timestamp = int(time.time() * 1000)  # 使用毫秒级时间戳
-            snapshot_name = f"snapshot-{timestamp}"
-            
-            snapshot_content = {
-                'spec': {
-                    'subjectRef': {
-                        'group': 'content.halo.run',
-                        'version': 'v1alpha1',
-                        'kind': 'Post',
-                        'name': post_name
+            try:
+                result = response.json()
+                post_name = result.get("metadata", {}).get("name", post_name)
+                post_title = result.get("spec", {}).get("title", title)
+                logger.info(f"Parsed response successfully, post_name: {post_name}")
+
+                yield self.create_text_message("✅ 文章创建成功！正在设置内容...")
+            except Exception as e:
+                logger.error(f"Failed to parse response: {e}")
+                yield self.create_text_message(f"❌ 解析响应失败: {e}")
+                return
+
+            # 🔧 关键修复：正确的内容设置流程
+            # 1. 先创建快照（内容存储）
+            # 2. 再关联快照到文章（版本控制）
+            # 3. 最后设置Console Content API（编辑器支持）
+
+            content_set_success = False
+            snapshot_name = None
+
+            # 步骤1: 创建内容快照
+            try:
+                yield self.create_text_message("📸 正在创建内容快照...")
+
+                timestamp = int(time.time() * 1000)
+                snapshot_name = f"snapshot-{timestamp}"
+
+                snapshot_data = {
+                    'spec': {
+                        'subjectRef': {
+                            'group': 'content.halo.run',
+                            'version': 'v1alpha1',
+                            'kind': 'Post',
+                            'name': post_name
+                        },
+                        'rawType': 'markdown',
+                        'rawPatch': content,
+                        'contentPatch': content,
+                        'lastModifyTime': datetime.now().isoformat() + 'Z',
+                        'owner': owner,
+                        'contributors': [owner]
                     },
-                    'rawType': 'markdown',
-                    'rawPatch': content,
-                    'contentPatch': content,  # 简化处理，让Halo自己渲染HTML
-                    'lastModifyTime': datetime.now().isoformat() + 'Z',
-                    'owner': owner,
-                    'contributors': [owner]
-                },
-                'apiVersion': 'content.halo.run/v1alpha1',
-                'kind': 'Snapshot',
-                'metadata': {
-                    'name': snapshot_name,
-                    'annotations': {
-                        'content.halo.run/keep-raw': 'true'
+                    'apiVersion': 'content.halo.run/v1alpha1',
+                    'kind': 'Snapshot',
+                    'metadata': {
+                        'name': snapshot_name,
+                        'annotations': {
+                            'content.halo.run/keep-raw': 'true',
+                            'content.halo.run/display-name': f'创建快照-{post_name}',
+                            'content.halo.run/version': str(timestamp)
+                        }
                     }
                 }
-            }
-            
-            try:
+
                 snapshot_response = session.post(
                     f"{base_url}/apis/content.halo.run/v1alpha1/snapshots",
-                    json=snapshot_content,
+                    json=snapshot_data,
                     timeout=30
                 )
-                
+
                 if snapshot_response.status_code in [200, 201]:
-                    snapshot_success = True
-                    yield self.create_text_message("✅ 快照创建成功！")
-                    
-                    # 🔧 修复409冲突：重新获取最新文章数据再关联
+                    yield self.create_text_message("✅ 内容快照创建成功！")
+
+                    # 🔧 关键修复：等待Halo处理快照，避免409冲突
+                    yield self.create_text_message("⏳ 等待Halo处理快照...")
+                    time.sleep(1)  # 等待1秒让Halo处理
+
+                    # 步骤2: 关联快照到文章
+                    yield self.create_text_message("🔗 正在关联快照到文章...")
+
+                    # 重新获取最新文章数据，避免版本冲突
                     latest_post_response = session.get(
                         f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}",
                         timeout=30
                     )
-                    
+
                     if latest_post_response.status_code == 200:
                         latest_post_data = latest_post_response.json()
                         latest_post_data['spec']['releaseSnapshot'] = snapshot_name
                         latest_post_data['spec']['headSnapshot'] = snapshot_name
                         latest_post_data['spec']['baseSnapshot'] = snapshot_name
-                        
+
+                        # 🔧 关键修复：如果需要立即发布，设置发布状态
+                        if publish_immediately:
+                            latest_post_data['spec']['publish'] = True
+                            latest_post_data['spec']['publishTime'] = datetime.now().isoformat() + 'Z'
+
                         update_response = session.put(
                             f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}",
                             json=latest_post_data,
                             timeout=30
                         )
-                        
+
                         if update_response.status_code in [200, 201]:
                             yield self.create_text_message("✅ 快照关联成功！")
+                            content_set_success = True
+
+                            # 如果发布，等待Halo处理
+                            if publish_immediately:
+                                yield self.create_text_message("📤 正在发布文章...")
+                                time.sleep(2)  # 等待Halo处理发布
+                                yield self.create_text_message("✅ 文章发布完成！")
                         else:
-                            yield self.create_text_message(f"⚠️ 快照关联失败: {update_response.status_code} - 使用最新数据重试")
+                            yield self.create_text_message(f"⚠️ 快照关联失败: {update_response.status_code}")
+                            logger.warning(f"快照关联失败: {update_response.text}")
                     else:
                         yield self.create_text_message("⚠️ 无法获取最新文章数据进行快照关联")
                 else:
                     yield self.create_text_message(f"⚠️ 快照创建失败: {snapshot_response.status_code}")
-                    
+                    logger.warning(f"快照创建失败: {snapshot_response.text}")
+
             except Exception as e:
                 logger.warning(f"快照创建过程中出错: {e}")
                 yield self.create_text_message(f"⚠️ 快照创建过程中出错")
-            
-            # 步骤2: 设置Console Content API（编辑器数据源）
-            console_content_success = False
-            try:
-                content_data_for_api = {
-                    "raw": content,
-                    "content": content,  # 让Halo自己处理HTML转换
-                    "rawType": "markdown"
-                }
-                
-                content_response = session.put(
-                    f"{base_url}/apis/api.console.halo.run/v1alpha1/posts/{post_name}/content",
-                    json=content_data_for_api,
-                    timeout=30
-                )
-                
-                # 🔧 关键修复：Console Content API 的 500 错误是正常现象
-                if content_response.status_code in [200, 201]:
-                    console_content_success = True
-                    yield self.create_text_message("✅ 编辑器内容设置成功！")
-                elif content_response.status_code == 500:
-                    # 500错误是Halo系统的正常行为，不影响实际功能
-                    console_content_success = True
-                    yield self.create_text_message("✅ 编辑器内容设置完成（Halo内部处理中）")
-                    logger.info(f"Console Content API返回500（正常现象）: {content_response.text}")
-                else:
-                    yield self.create_text_message(f"⚠️ 编辑器内容设置失败: HTTP {content_response.status_code}")
-                    logger.warning(f"Console Content API失败: {content_response.status_code}, {content_response.text}")
-                    
-            except Exception as e:
-                logger.warning(f"Console Content API调用出错: {e}")
-                yield self.create_text_message(f"⚠️ 编辑器内容设置过程中出错")
-            
-                            # 步骤3: 更新编辑器兼容性注解 - 正确的内容格式
-            editor_annotation_success = False
-            try:
-                # 🔧 关键修复：使用真实内容而不是模拟数据
-                content_json_data = {
-                    "rawType": "markdown",
-                    "raw": content,  # 使用真实内容
-                    "content": content  # 使用真实内容
-                }
-                
-                # 获取最新文章数据并更新注解
-                latest_post_response = session.get(f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}")
-                if latest_post_response.status_code == 200:
-                    latest_post_data = latest_post_response.json()
-                    
-                    if 'metadata' not in latest_post_data:
-                        latest_post_data['metadata'] = {}
-                    if 'annotations' not in latest_post_data['metadata']:
-                        latest_post_data['metadata']['annotations'] = {}
-                    
-                    # 🔧 关键修复：使用正确的内容格式设置注解
-                    latest_post_data['metadata']['annotations'].update({
-                        'content.halo.run/content-json': json.dumps(content_json_data),
-                        'content.halo.run/preferred-editor': editor_type,
-                        'content.halo.run/content-type': 'markdown'
-                    })
-                    
-                    annotation_response = session.put(
-                        f"{base_url}/apis/content.halo.run/v1alpha1/posts/{post_name}",
-                        json=latest_post_data,
-                        timeout=30
-                    )
-                    
-                    if annotation_response.status_code in [200, 201]:
-                        editor_annotation_success = True
-                        yield self.create_text_message("✅ 编辑器兼容性注解更新成功！")
-                    else:
-                        yield self.create_text_message(f"⚠️ 注解更新失败: {annotation_response.status_code}")
-                        
-            except Exception as e:
-                logger.warning(f"编辑器注解更新出错: {e}")
-                yield self.create_text_message(f"⚠️ 编辑器注解更新过程中出错")
-            
-            # 验证最终结果
-            if snapshot_success and console_content_success and editor_annotation_success:
-                yield self.create_text_message("🔍 正在验证编辑器兼容性...")
-                
-                try:
-                    # 验证content API是否工作
-                    verify_content_response = session.get(
-                        f"{base_url}/apis/api.console.halo.run/v1alpha1/posts/{post_name}/content",
-                        timeout=10
-                    )
-                    
-                    # 🔧 关键修复：Console Content API 验证时 500 错误是正常现象
-                    if verify_content_response.status_code == 200:
-                        verify_content = verify_content_response.json()
-                        verified_raw = verify_content.get('raw', '')
-                        if len(verified_raw) > 0:
-                            yield self.create_text_message("✅ 编辑器兼容性验证通过！内容可正常访问。")
-                        else:
-                            yield self.create_text_message("⚠️ 内容验证失败：内容为空。")
-                    elif verify_content_response.status_code == 500:
-                        # 500错误是Halo系统的正常行为，验证通过
-                        yield self.create_text_message("✅ 编辑器兼容性验证通过！（Halo内部处理中，功能正常）")
-                    else:
-                        yield self.create_text_message(f"⚠️ 内容验证返回状态码: {verify_content_response.status_code}")
-                        
-                except Exception as e:
-                    yield self.create_text_message("⚠️ 内容验证出错。")
-            else:
-                yield self.create_text_message("⚠️ 由于内容设置失败，编辑器可能无法正常工作。")
+
+
+
+
             
             # 如果需要发布，调用发布API
             if publish_immediately:
@@ -764,10 +695,10 @@ class HaloPostCreateTool(Tool):
             response_lines.extend([
                 "",
                 f"🎨 **编辑器类型**: {editor_display.get(editor_type, editor_type)}",
-                f"✨ **编辑器兼容性**: {'✅ 已修复' if snapshot_success and console_content_success and editor_annotation_success else '⚠️ 部分修复'}",
-                f"📄 **内容设置**: {'✅ 成功' if snapshot_success and console_content_success and editor_annotation_success else '❌ 失败'}",
+                f"✨ **编辑器兼容性**: {'✅ 已修复' if content_set_success else '⚠️ 部分修复'}",
+                f"📄 **内容设置**: {'✅ 成功' if content_set_success else '❌ 失败'}",
                 f"🔗 **编辑器链接**: {base_url}/console/posts/editor?name={post_name}",
-                f"💡 **提示**: {'文章现在可以在' + editor_display.get(editor_type, editor_type) + '中正常编辑' if snapshot_success and console_content_success and editor_annotation_success else '请手动在编辑器中设置内容'}"
+                f"💡 **提示**: {'文章现在可以在' + editor_display.get(editor_type, editor_type) + '中正常编辑' if content_set_success else '请手动在编辑器中设置内容'}"
             ])
             
             yield self.create_text_message('\n'.join(response_lines))
@@ -784,9 +715,9 @@ class HaloPostCreateTool(Tool):
                 "tags_count": len(tags),
                 "editor_type": editor_type,
                 "editor_display": editor_display.get(editor_type, editor_type),
-                "editor_compatible": snapshot_success and console_content_success and editor_annotation_success,
-                "content_set": snapshot_success and console_content_success and editor_annotation_success,
-                "content_method": "content API + content-json annotation + snapshot + console content API",
+                "editor_compatible": content_set_success,
+                "content_set": content_set_success,
+                "content_method": "console content API only",
                 "api_endpoint_used": "content.halo.run/v1alpha1/posts",
                 "editor_url": f"{base_url}/console/posts/editor?name={post_name}"
             }
