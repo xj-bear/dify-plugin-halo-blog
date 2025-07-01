@@ -5,7 +5,7 @@ This plugin provides AI-powered blog management capabilities for Halo CMS,
 including article CRUD operations and moment creation.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.0.1"
 __author__ = "jason"
 
 from .exceptions import (

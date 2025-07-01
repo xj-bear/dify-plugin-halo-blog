@@ -1,4 +1,4 @@
-version: 0.0.3
+version: 0.0.1
 type: plugin
 author: jason
 name: halo-blog-tools
@@ -17,7 +17,7 @@ plugins:
   tools:
     - provider/halo-blog-tools.yaml
 meta:
-  version: 0.0.3
+  version: 0.0.1
   arch:
     - amd64
     - arm64

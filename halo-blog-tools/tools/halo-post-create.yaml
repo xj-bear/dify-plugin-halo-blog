@@ -117,6 +117,35 @@ parameters:
       pt_BR: "Se deve publicar o post imediatamente ou salvar como rascunho"
     llm_description: "Whether to publish the post immediately (true) or save as draft (false)"
     form: form
+  - name: editor_type
+    type: select
+    required: false
+    default: "default"
+    options:
+      - label:
+          en_US: "Default Rich Text Editor"
+          zh_Hans: "默认富文本编辑器"
+        value: "default"
+      - label:
+          en_US: "StackEdit Markdown Editor"
+          zh_Hans: "StackEdit Markdown编辑器"
+        value: "stackedit"
+      - label:
+          en_US: "ByteMD Markdown Editor"
+          zh_Hans: "ByteMD Markdown编辑器"
+        value: "bytemd"
+      - label:
+          en_US: "Vditor Editor (if installed)"
+          zh_Hans: "Vditor编辑器（如已安装）"
+        value: "vditor"
+    label:
+      en_US: "Preferred Editor"
+      zh_Hans: "首选编辑器"
+    human_description:
+      en_US: "Choose the preferred editor for content editing"
+      zh_Hans: "选择内容编辑的首选编辑器"
+    llm_description: "Choose the preferred editor for content editing (optional)"
+    form: form
 extra:
   python:
     source: tools/halo-post-create.py 

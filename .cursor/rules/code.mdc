@@ -11,3 +11,10 @@ alwaysApply: true
 2.使用https://docs.dify.ai/plugin-dev-zh/0221-initialize-development-tools进行工具初始化
 3.https://docs.dify.ai/plugin-dev-zh/0222-tool-plugin了解 tool 插件开发
 4.https://docs.dify.ai/plugin-dev-zh/0321-plugin-auto-publish-pr通过发布打包
+
+
+严格遵循调试步骤
+严格阅读dify的插件调试文档。https://docs.dify.ai/plugin-dev-zh/0411-remote-debug-a-plugin
+使用dify cli进行打包。
+使用REMOTE_INSTALL_URL=debug.dify.ai:5003进行远程测试。
+相关文件夹下面的.env文件已经设置了，请不要来回问为什么没设置，我需要设置等等，直接调用即可。

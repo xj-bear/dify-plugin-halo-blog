@@ -25,7 +25,7 @@ foreach ($file in $FilesToInclude) {
 }
 
 # Create ZIP file
-$OutputPath = "../halo-blog-tools-v0.0.3.zip"
+$OutputPath = "../halo-blog-tools-v0.0.1.zip"
 try {
     Compress-Archive -Path $FilesToInclude -DestinationPath $OutputPath -Force
     Write-Host "ZIP file created successfully: $OutputPath"
@@ -35,7 +35,7 @@ try {
 }
 
 # Rename to .difypkg
-$DifypkgPath = "../halo-blog-tools-v0.0.3.difypkg"
+$DifypkgPath = "../halo-blog-tools-v0.0.1.difypkg"
 try {
     if (Test-Path $DifypkgPath) {
         Remove-Item $DifypkgPath -Force
