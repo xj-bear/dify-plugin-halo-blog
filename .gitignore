@@ -208,6 +208,11 @@ GUIDE.md
 PRIVACY.md
 VERIFICATION_REPORT.md
 
+# IDE and development folders
+.augment/
+.cursor/
+_pycache_/
+
 # Development documentation (should not be in GitHub)
 doc/
 
