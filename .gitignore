@@ -199,20 +199,17 @@ Bug修复报告*.md
 远程调试*.md
 快速修复*.md
 
-# Custom exclusions
+# Custom exclusions for this project
 .cursor/
 .augment/
-_assets/
-_pyche_/
-doc/
-tools/
+_pycache_/
 dify-new.exe
 GUIDE.md
 PRIVACY.md
 VERIFICATION_REPORT.md
 
-# 保留 doc/ 文件夹下的文档
-!doc/
+# Development documentation (should not be in GitHub)
+doc/
 
-# Assets
+# Assets folder (contains development assets)
 _assets/
